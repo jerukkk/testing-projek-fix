@@ -6,7 +6,7 @@ export const sanityClient = createClient({
   projectId: projectId || '',
   dataset: dataset || '',
   apiVersion,
-  token: token || undefined, // Only use token if it exists
+  token: typeof window === 'undefined' ? token || undefined : undefined, // Only use token in server-side code
   useCdn: true, // Set to true for public content to improve performance
   perspective: 'published', // Only fetch published content
 })
@@ -16,6 +16,6 @@ export const previewClient = createClient({
   projectId,
   dataset,
   apiVersion,
-  token,
+  token: typeof window === 'undefined' ? token : undefined, // Only use token in server-side code
   useCdn: false,
 })
