@@ -6,9 +6,11 @@ export const sanityClient = createClient({
   projectId: projectId || '',
   dataset: dataset || '',
   apiVersion,
-  token: typeof window === 'undefined' ? token || undefined : undefined, // Only use token in server-side code
+  token: token || undefined, // Use token if available, regardless of client/server
   useCdn: true, // Set to true for public content to improve performance
   perspective: 'published', // Only fetch published content
+  ignoreBrowserConfig: true, // Ignore browser config to prevent conflicts
+  timeout: 30000, // 30 second timeout
 })
 
 // Set up a preview client
@@ -16,6 +18,8 @@ export const previewClient = createClient({
   projectId,
   dataset,
   apiVersion,
-  token: typeof window === 'undefined' ? token : undefined, // Only use token in server-side code
+  token: token || undefined, // Use token if available, regardless of client/server
   useCdn: false,
+  ignoreBrowserConfig: true, // Ignore browser config to prevent conflicts
+  timeout: 30000, // 30 second timeout
 })
