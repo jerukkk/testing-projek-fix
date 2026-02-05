@@ -38,28 +38,43 @@ const ALL_MEMBERS_QUERY = groq`
   }
 `;
 
+// Enable Incremental Static Regeneration (ISR)
+export const revalidate = 60; // Revalidate every 60 seconds
+
 export default async function MembersPage() {
-  const members: Member[] = await sanityClient.fetch(ALL_MEMBERS_QUERY);
+  let members: any[] = [];
+  
+  try {
+    members = await sanityClient.fetch(ALL_MEMBERS_QUERY);
+  } catch (error) {
+    console.error('Error fetching members:', error);
+    return (
+      <div className="container mx-auto py-12 px-4">
+        <h1 className="text-4xl font-bold mb-8">Our Team</h1>
+        <p className="text-lg text-red-600">Error loading members. Please check your connection and API configuration.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-12 px-4">
       <h1 className="text-4xl font-bold mb-8">Our Team</h1>
-      
+
       {members.length === 0 ? (
         <p className="text-lg">No members found. Please add some members in Sanity Studio.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {members.map((member) => (
-            <div 
-              key={member._id} 
+            <div
+              key={member._id}
               className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
             >
               <div className="p-6">
                 <div className="flex items-center mb-4">
                   {member.photo && (
                     <div className="w-16 h-16 rounded-full overflow-hidden mr-4">
-                      <img 
-                        src={urlForImage(member.photo).width(100).height(100).url()} 
+                      <img
+                        src={urlForImage(member.photo).width(100).height(100).url()}
                         alt={member.photo.alt || member.name}
                         className="w-full h-full object-cover"
                         width={100}
@@ -75,7 +90,7 @@ export default async function MembersPage() {
                     )}
                   </div>
                 </div>
-                
+
                 {member.bio && member.bio.length > 0 && (
                   <div className="mb-4">
                     <p className="text-gray-700 dark:text-gray-300">
@@ -83,11 +98,11 @@ export default async function MembersPage() {
                     </p>
                   </div>
                 )}
-                
+
                 {member.email && (
                   <div className="mb-2">
-                    <a 
-                      href={`mailto:${member.email}`} 
+                    <a
+                      href={`mailto:${member.email}`}
                       className="text-blue-600 dark:text-blue-400 hover:underline flex items-center"
                     >
                       <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -97,14 +112,14 @@ export default async function MembersPage() {
                     </a>
                   </div>
                 )}
-                
+
                 {member.socialLinks && member.socialLinks.length > 0 && (
                   <div className="flex space-x-3">
-                    {member.socialLinks.map((link, index) => (
-                      <a 
+                    {member.socialLinks.map((link: { url: string; platform: string }, index: number) => (
+                      <a
                         key={index}
-                        href={link.url} 
-                        target="_blank" 
+                        href={link.url}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
                         title={link.platform}
