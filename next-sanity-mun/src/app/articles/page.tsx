@@ -23,7 +23,7 @@ const ALL_ARTICLES_QUERY = groq`
 `;
 
 // Enable Incremental Static Regeneration (ISR)
-export const revalidate = 60; // Revalidate every 60 seconds
+export const revalidate = 30; // Revalidate every 30 seconds for faster updates
 
 export default async function ArticlesPage() {
   let articles: any[] = [];
