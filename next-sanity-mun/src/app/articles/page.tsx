@@ -3,6 +3,7 @@ import { sanityClient } from '@/lib/sanity.client';
 import { Article } from '@/types/sanity';
 import Link from 'next/link';
 import { urlForImage } from '@/lib/sanity.image';
+import { unstable_cache } from 'next/cache';
 
 // Query to fetch all articles
 const ALL_ARTICLES_QUERY = groq`
@@ -22,14 +23,23 @@ const ALL_ARTICLES_QUERY = groq`
   } | order(publishedAt desc)
 `;
 
+// Cache function with tag
+const getAllArticles = unstable_cache(
+  async () => {
+    return await sanityClient.fetch(ALL_ARTICLES_QUERY);
+  },
+  ['all-articles'],
+  { tags: ['sanity-content'] }
+);
+
 // Enable Incremental Static Regeneration (ISR)
 export const revalidate = 30; // Revalidate every 30 seconds for faster updates
 
 export default async function ArticlesPage() {
   let articles: any[] = [];
-  
+
   try {
-    articles = await sanityClient.fetch(ALL_ARTICLES_QUERY);
+    articles = await getAllArticles();
   } catch (error) {
     console.error('Error fetching articles:', error);
     return (

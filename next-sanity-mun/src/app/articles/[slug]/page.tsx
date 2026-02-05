@@ -4,6 +4,7 @@ import { Article } from '@/types/sanity';
 import { urlForImage } from '@/lib/sanity.image';
 import { PortableText } from '@portabletext/react';
 import { portableTextComponents } from '@/components/PortableTextComponents';
+import { unstable_cache } from 'next/cache';
 
 // Define the query to fetch a single article by slug
 const ARTICLE_QUERY = groq`
@@ -48,10 +49,27 @@ const ALL_ARTICLES_QUERY = groq`
   } | order(publishedAt desc)
 `;
 
+// Cache functions with tags
+const getAllArticles = unstable_cache(
+  async () => {
+    return await sanityClient.fetch(ALL_ARTICLES_QUERY);
+  },
+  ['all-articles'],
+  { tags: ['sanity-content'] }
+);
+
+const getArticleBySlug = unstable_cache(
+  async (slug: string) => {
+    return await sanityClient.fetch(ARTICLE_QUERY, { slug });
+  },
+  ['article-by-slug'],
+  { tags: ['sanity-content'] }
+);
+
 // Fetch the article data
 export async function generateStaticParams() {
   try {
-    const articles: any[] = await sanityClient.fetch(ALL_ARTICLES_QUERY);
+    const articles: any[] = await getAllArticles();
 
     return articles.map((article) => ({
       slug: article.slug, // Now it's already a string due to the alias
@@ -71,7 +89,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   let article: any = null;
 
   try {
-    article = await sanityClient.fetch(ARTICLE_QUERY, { slug });
+    article = await getArticleBySlug(slug);
   } catch (error) {
     console.error(`Error fetching article with slug "${slug}":`, error);
     return (
