@@ -11,10 +11,7 @@ export const sanityClient = createClient({
   token: token || process.env.SANITY_API_TOKEN || undefined,
   useCdn: true, // Set to true for public content to improve performance
   perspective: 'published', // Only fetch published content
-  ignoreBrowserConfig: true, // Ignore browser config to prevent conflicts
   timeout: 60000, // 60 second timeout for slower networks
-  // Add retry mechanism
-  maxRetries: 3,
 })
 
 // Set up a preview client
@@ -24,7 +21,5 @@ export const previewClient = createClient({
   apiVersion,
   token: token || process.env.SANITY_API_TOKEN || undefined,
   useCdn: false,
-  ignoreBrowserConfig: true, // Ignore browser config to prevent conflicts
   timeout: 60000, // 60 second timeout for slower networks
-  maxRetries: 3, // Add retry mechanism
 })
