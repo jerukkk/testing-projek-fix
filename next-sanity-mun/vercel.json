@@ -1,29 +1,7 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    }
-  ],
-  "env": {
-    "NEXT_PUBLIC_SANITY_PROJECT_ID": "ny2z8d3s",
-    "NEXT_PUBLIC_SANITY_DATASET": "production",
-    "NEXT_PUBLIC_SANITY_API_VERSION": "2024-03-19",
-    "SANITY_API_TOKEN": "$skQHZMdporfkvwbiXzJPSau11rccK0Vuq6rjlLSelGRVAmPyMQf6B4sRvOa17idDZOW51MgNx1YIf4s0qbjzMeVF3flysIM3yEFXYYOzfjXCfPswyFoKhReOPmfQ92ILGwIEde3n9bsznoZ0IoLjAaPj7dArGknzHHv1kn07iO9spwualyvQ"
-  },
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_SANITY_PROJECT_ID": "ny2z8d3s",
-      "NEXT_PUBLIC_SANITY_DATASET": "production",
-      "NEXT_PUBLIC_SANITY_API_VERSION": "2024-03-19",
-      "SANITY_API_TOKEN": "$skQHZMdporfkvwbiXzJPSau11rccK0Vuq6rjlLSelGRVAmPyMQf6B4sRvOa17idDZOW51MgNx1YIf4s0qbjzMeVF3flysIM3yEFXYYOzfjXCfPswyFoKhReOPmfQ92ILGwIEde3n9bsznoZ0IoLjAaPj7dArGknzHHv1kn07iO9spwualyvQ"
+  "functions": {
+    "src/app/api/revalidate/route.ts": {
+      "maxDuration": 30
     }
   }
 }
