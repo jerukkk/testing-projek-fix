@@ -1,23 +1,23 @@
 import { groq } from 'next-sanity';
 import { sanityClient } from '@/lib/sanity.client';
-import { Event } from '@/types/sanity';
 import Link from 'next/link';
 import { urlForImage } from '@/lib/sanity.image';
+import { PortableText } from '@portabletext/react';
 
-// Helper function to extract plain text from PortableText
-function extractPlainTextFromPortableText(blocks: any[]): string {
-  if (!blocks || !Array.isArray(blocks)) return '';
-  
-  return blocks
-    .map((block: any) => {
-      if (block._type === 'block' && block.children) {
-        return block.children.map((child: any) => child.text || '').join('');
-      }
-      return '';
-    })
-    .join(' ')
-    .trim();
-}
+// Define how to render PortableText blocks
+const portableTextComponents = {
+  block: {
+    normal: ({ children }: any) => <p className="text-gray-600 text-sm line-clamp-2 mb-2">{children}</p>,
+  },
+  list: {
+    bullet: ({ children }: any) => <ul className="list-disc pl-5 text-gray-600 text-sm mb-2">{children}</ul>,
+    number: ({ children }: any) => <ol className="list-decimal pl-5 text-gray-600 text-sm mb-2">{children}</ol>,
+  },
+  listItem: {
+    bullet: ({ children }: any) => <li className="mb-1">{children}</li>,
+    number: ({ children }: any) => <li className="mb-1">{children}</li>,
+  },
+};
 
 // Query to fetch all events
 const ALL_EVENTS_QUERY = groq`
@@ -29,7 +29,7 @@ const ALL_EVENTS_QUERY = groq`
     endDate,
     location,
     eventType,
-    description[],
+    description,
     featuredImage {
       asset->{
         _id,
@@ -45,113 +45,90 @@ export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function EventsPage() {
   let events: any[] = [];
-  
+
   try {
     events = await sanityClient.fetch(ALL_EVENTS_QUERY);
   } catch (error) {
     console.error('Error fetching events:', error);
-    return (
-      <div className="container mx-auto py-12 px-4">
-        <h1 className="text-4xl font-bold mb-8">Upcoming Events</h1>
-        <p className="text-lg text-red-600">Error loading events. Please check your connection and API configuration.</p>
-      </div>
-    );
   }
 
   return (
-    <div className="container mx-auto py-12 px-4">
-      <h1 className="text-4xl font-bold mb-8">Upcoming Events</h1>
-
-      {events.length === 0 ? (
-        <p className="text-lg">No events found. Please add some events in Sanity Studio.</p>
-      ) : (
-        <div className="space-y-10">
-          {events.map((event) => (
-            <article
-              key={event._id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
-            >
-              <div className="md:flex">
+    <div className="min-h-screen bg-white py-12">
+      <div className="container mx-auto px-4">
+        <h1 className="text-4xl font-bold text-center mb-12 text-gray-900">Upcoming Events</h1>
+        
+        {events.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {events.map((event: any) => (
+              <div
+                key={event._id}
+                className="bg-gray-50 rounded-lg shadow-sm overflow-hidden"
+              >
                 {event.featuredImage && (
-                  <div className="md:w-1/3">
+                  <div className="h-48 overflow-hidden">
                     <img
-                      src={urlForImage(event.featuredImage).width(400).height(300).url()}
+                      src={urlForImage(event.featuredImage).width(600).height(400).url()}
                       alt={event.featuredImage.alt || event.title}
-                      className="w-full h-64 md:h-full object-cover"
-                      width={400}
-                      height={300}
+                      className="w-full h-full object-cover"
+                      width={600}
+                      height={400}
                     />
                   </div>
                 )}
-
-                <div className={`p-6 ${event.featuredImage ? 'md:w-2/3' : 'w-full'}`}>
-                  <div className="flex flex-wrap items-center mb-3">
-                    <h2 className="text-2xl font-bold mr-4">
-                      <Link
-                        href={`/events/${event.slug}`}
-                        className="hover:underline"
-                      >
-                        {event.title}
-                      </Link>
-                    </h2>
-
+                <div className="p-6">
+                  <div className="flex items-center mb-3">
                     {event.eventType && (
-                      <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full uppercase tracking-wide">
+                      <div className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full mr-3 uppercase">
                         {event.eventType}
-                      </span>
+                      </div>
                     )}
-                  </div>
-
-                  <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm mb-3">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    <span>
+                    <span className="text-sm text-gray-600">
                       {new Date(event.startDate).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
                       })}
-                      {event.endDate && ` - ${new Date(event.endDate).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}`}
+                      {event.endDate && event.endDate !== event.startDate && (
+                        <> - {new Date(event.endDate).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}</>
+                      )}
                     </span>
                   </div>
-
-                  {event.location && (
-                    <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm mb-4">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                      </svg>
-                      <span>{event.location}</span>
-                    </div>
+                  <h2 className="text-xl font-semibold mb-2 text-gray-900">
+                    <Link href={`/events/${event.slug}`} className="hover:underline">
+                      {event.title}
+                    </Link>
+                  </h2>
+                  <p className="text-gray-600 mb-2">
+                    {event.location || 'Location TBD'}
+                  </p>
+                  {event.description && Array.isArray(event.description) && (
+                    <PortableText value={event.description} components={portableTextComponents} />
                   )}
-
-                  {event.description && event.description.length > 0 && (
-                    <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-3">
-                      {/* Extract text from PortableText array for preview */}
-                      {extractPlainTextFromPortableText(event.description).substring(0, 150) + '...'}
-                    </p>
-                  )}
-
-                  <Link
-                    href={`/events/${event.slug}`}
-                    className="text-blue-600 dark:text-blue-400 font-medium hover:underline inline-flex items-center"
-                  >
-                    View details
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                  </Link>
                 </div>
               </div>
-            </article>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        ) : (
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gray-50 rounded-lg p-8 text-center">
+              <h2 className="text-2xl font-semibold mb-4 text-gray-800">No Events Scheduled</h2>
+              <p className="text-gray-600 mb-6">
+                Our events calendar is currently empty. Stay tuned for exciting Model United Nations conferences, workshops, and networking events.
+              </p>
+              <Link 
+                href="/" 
+                className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg transition duration-300"
+              >
+                Back to Home
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
