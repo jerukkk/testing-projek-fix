@@ -24,11 +24,11 @@ const ALL_MEMBERS_QUERY = groq`
   *[_type == "member"] {
     _id,
     name,
-    role,
+    position,
     bio,
     email,
     socialLinks,
-    profileImage {
+    photo {
       asset->{
         _id,
         url
@@ -56,54 +56,72 @@ export default async function MembersPage() {
         <h1 className="text-4xl font-bold text-center mb-12 text-gray-900">Our Team</h1>
         
         {members.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {members.map((member: any) => (
               <div
                 key={member._id}
-                className="bg-gray-50 rounded-lg shadow-sm overflow-hidden"
+                className="bg-gray-50 rounded-lg shadow-sm overflow-hidden flex flex-col h-[500px]"
               >
-                {member.profileImage && (
-                  <div className="h-48 overflow-hidden">
+                {/* Profile Image - Top portion */}
+                <div className="relative flex-shrink-0 h-2/3 overflow-hidden">
+                  {member.photo && (
                     <img
-                      src={urlForImage(member.profileImage).width(400).height(400).url()}
-                      alt={member.profileImage.alt || member.name}
+                      src={urlForImage(member.photo).width(400).height(500).url()}
+                      alt={member.photo.alt || member.name}
                       className="w-full h-full object-cover"
                       width={400}
-                      height={400}
+                      height={500}
                     />
-                  </div>
-                )}
-                <div className="p-6">
-                  <h2 className="text-xl font-semibold mb-1 text-gray-900">{member.name}</h2>
-                  <p className="text-gray-600 mb-3">{member.role}</p>
-                  {member.bio && Array.isArray(member.bio) && (
-                    <div className="text-gray-600 text-sm mb-4 line-clamp-3">
-                      <PortableText value={member.bio} components={portableTextComponents} />
+                  )}
+                  {!member.photo && (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-gray-500">No Photo</span>
                     </div>
                   )}
-                  {!Array.isArray(member.bio) && member.bio && (
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                      {member.bio}
-                    </p>
-                  )}
-                  {member.email && (
-                    <p className="text-gray-600 text-sm mb-2">
-                      <a href={`mailto:${member.email}`} className="text-blue-600 hover:underline">
-                        {member.email}
-                      </a>
-                    </p>
-                  )}
+                </div>
+
+                {/* Name and Role - Middle portion */}
+                <div className="p-4 flex-grow flex flex-col">
+                  <h2 className="text-lg font-semibold mb-1 text-gray-900 text-center">{member.name}</h2>
+                  <p className="text-gray-600 mb-3 text-center">{member.position}</p>
+                  
+                  {/* Social Media Icons - Bottom portion */}
                   {member.socialLinks && member.socialLinks.length > 0 && (
-                    <div className="flex space-x-3">
+                    <div className="mt-auto flex justify-center space-x-4">
                       {member.socialLinks.map((social: any, index: number) => (
-                        <a 
+                        <a
                           key={index}
-                          href={social.url} 
-                          target="_blank" 
+                          href={social.url}
+                          target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm"
+                          className="text-blue-600 hover:text-blue-800 transition duration-300"
+                          title={social.platform}
                         >
-                          {social.platform}
+                          {social.platform.toLowerCase().includes('linkedin') ? (
+                            <div className="w-6 h-6 flex items-center justify-center">
+                              <img 
+                                src="/icons/linkedin-icon.jpg" 
+                                alt="LinkedIn" 
+                                width={24} 
+                                height={24}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          ) : social.platform.toLowerCase().includes('instagram') ? (
+                            <div className="w-6 h-6 flex items-center justify-center">
+                              <img 
+                                src="/icons/instagram-icon" 
+                                alt="Instagram" 
+                                width={24} 
+                                height={24}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-6 h-6 flex items-center justify-center">
+                              {social.platform.charAt(0).toUpperCase()}
+                            </div>
+                          )}
                         </a>
                       ))}
                     </div>
