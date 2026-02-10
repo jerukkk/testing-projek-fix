@@ -110,7 +110,7 @@ export default async function MembersPage() {
                           ) : social.platform.toLowerCase().includes('instagram') ? (
                             <div className="w-6 h-6 flex items-center justify-center">
                               <img 
-                                src="/icons/instagram-icon" 
+                                src="/icons/instagram-icon.jpg" 
                                 alt="Instagram" 
                                 width={24} 
                                 height={24}
