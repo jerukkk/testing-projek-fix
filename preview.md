@@ -1,55 +1,62 @@
-Gemini said
-Itu wajar, karena fitur Presentation (tab preview) tidak aktif secara otomatis. Anda harus menambahkannya secara manual ke dalam konfigurasi Sanity.
+Tampilannya akan muncul langsung di dalam Dashboard Sanity Studio, bukan di tab browser terpisah.
 
-Tab "Structure" adalah bawaan untuk edit konten, dan "Vision" untuk tes query database. "Presentation" adalah plugin terpisah.
+Fitur ini disebut "Split Pane" (Layar Terbelah).
 
-Berikut langkah-langkah agar tab tersebut muncul:
+Visualisasinya Seperti Ini:
+Bayangkan layar laptop klien Anda terbagi dua secara vertikal:
 
-1. Cek File sanity.config.ts
-Buka file sanity.config.ts (biasanya ada di root folder projek Anda).
+Sebelah KIRI (Panel Editor): Tempat mereka mengetik judul, upload gambar, isi body artikel, dll (Form input Sanity biasa).
 
-2. Import & Tambahkan Plugin
-Anda perlu meng-import presentationTool dan memasukkannya ke dalam array plugins.
+Sebelah KANAN (Panel Preview): Website Next.js Anda yang asli dimuat di sini (menggunakan iframe).
 
-Ubah kodenya menjadi seperti ini:
+Keajaibannya (Real-time Sync):
+Saat klien mengetik satu huruf di panel KIRI, tampilan website di panel KANAN akan berubah secara instan (Real-time) tanpa perlu menekan tombol Save atau Publish.
+
+Cara Mengaksesnya Nanti (Untuk Klien)
+Setelah Anda setup kodenya, begini cara klien melihatnya:
+
+Login ke Sanity Studio (/studio atau domain studio Anda).
+
+Di menu navigasi atas (biasanya ada "Structure" dan "Vision"), akan muncul tab baru bernama "Presentation".
+
+Klik tab Presentation.
+
+Layar langsung berubah jadi mode Split Screen.
+
+Mereka bisa klik artikel mana saja di list, dan preview-nya akan muncul di kanan.
+
+⚠️ PENTING: Masalah "Localhost" vs "Production"
+Ini bagian yang sering bikin bingung pemula.
+
+Karena website Next.js Anda ada di dua tempat (Laptop Anda/Localhost dan Vercel/Production), Anda harus mengatur Sanity agar tahu harus menampilkan yang mana.
+
+Di file sanity.config.ts, pastikan setting previewUrl-nya dinamis seperti ini:
 
 TypeScript
 import { defineConfig } from 'sanity'
-import { structureTool } from 'sanity/structure'
-import { visionTool } from '@sanity/vision'
-// 1. IMPORT INI
-import { presentationTool } from 'sanity/presentation' 
+import { presentationTool } from 'sanity/presentation'
 
 export default defineConfig({
-  // ... (config lain seperti projectId, dataset) ...
-
+  // ...
   plugins: [
-    structureTool(),
-    visionTool(),
-
-    // 2. TAMBAHKAN BAGIAN INI
     presentationTool({
       previewUrl: {
-        // Ini memberi tahu Sanity: "Tolong load website Next.js saya di sebelah kanan"
+        // Logika: 
+        // Kalau sedang di komputer Anda (development), pakai localhost:3000
+        // Kalau sudah dideploy (production), pakai URL Vercel asli
         origin: typeof location === 'undefined' || location.hostname === 'localhost' 
           ? 'http://localhost:3000' 
-          : 'https://domain-vercel-anda.vercel.app', 
+          : 'https://nama-project-mun.vercel.app', // Ganti dengan domain Vercel Anda
           
         previewMode: {
-          enable: '/api/draft', // Route API yang nanti kita buat (biarkan dulu)
+          enable: '/api/draft', // Rute API yang tadi kita buat
         },
       },
     }),
   ],
 })
-3. Restart Server
-Setelah menyimpan file di atas, matikan terminal (Ctrl + C) lalu jalankan ulang:
+Kenapa setting ini penting? Jika Anda lupa setting ini, saat klien membuka Sanity Studio dari rumah mereka, Sanity akan mencoba memanggil http://localhost:3000. Karena di laptop klien tidak ada server Next.js yang jalan, preview-nya akan ERROR / BLANK.
 
-Bash
-npm run dev
-4. Cek Browser
-Buka kembali http://localhost:3000/studio (atau di mana studio Anda berada). Sekarang seharusnya sudah muncul Tab Presentation di samping Structure dan Vision.
+Dengan setting di atas, Sanity akan otomatis memanggil website Vercel (https://...) saat klien mengaksesnya.
 
-Catatan: Saat Anda klik tab Presentation, mungkin preview-nya masih Blank atau Error karena kita belum membuat API Route /api/draft di Next.js (Langkah yang saya jelaskan sebelumnya). Tapi setidaknya tab-nya sudah muncul dulu.
-
-Coba lakukan langkah di atas, apakah tab-nya sudah muncul?
+Jadi, outputnya sangat rapi dan terintegrasi di satu layar. Klien pasti suka!
